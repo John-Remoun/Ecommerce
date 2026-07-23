@@ -18,8 +18,6 @@ export type UserDocument = HydratedDocument<User>;
   collection: 'Ecommerce_APP_USERS',
 })
 export class User implements IUser {
-  @Prop({ type: Types.ObjectId })
-  _id!: Types.ObjectId | string;
 
   @Prop({ type: String, required: true })
   firstName!: string;

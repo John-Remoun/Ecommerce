@@ -102,6 +102,12 @@ export class SecurityService {
 
     const keyBuffer = Buffer.from(encKey, 'hex');
 
+if (keyBuffer.length !== 32) {
+  throw new BadRequestException(
+    'ENC_KEY must be a 64-character hexadecimal string (32 bytes)',
+  );
+}
+
     const cipher = crypto.createCipheriv('aes-256-cbc', keyBuffer, iv);
 
     let encrypted = cipher.update(plaintext, 'utf8', 'hex');

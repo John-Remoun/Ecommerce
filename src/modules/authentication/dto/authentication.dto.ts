@@ -45,7 +45,7 @@ export class SignupDto extends LoginDto {
   username!: string;
 
   @ValidateIf((data: SignupDto) => Boolean(data.password))
-  @IsMatch(['password'])
+  @IsMatch('password')
   confirmPassword!: string;
 
   @IsNotEmpty()

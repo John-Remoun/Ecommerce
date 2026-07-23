@@ -17,13 +17,24 @@ export class BrandService {
       .replace(/-+/g, '-');
   }
 
-  async create(dto: CreateBrandDto) {
-    const brand = await this.brandRepository.createOne({ data: dto });
+async create(dto: CreateBrandDto) {
+  try {
+    const brand = await this.brandRepository.createOne({
+      data: {
+        ...dto,
+        slug: this.generateSlug(dto.name),
+      },
+    });
+
     return {
       message: 'Brand created successfully',
       data: brand,
     };
+  } catch (error) {
+    console.error(error);
+    throw error;
   }
+}
 
   async findAll(query: PaginationQueryDto) {
     const result = await this.brandRepository.paginate({

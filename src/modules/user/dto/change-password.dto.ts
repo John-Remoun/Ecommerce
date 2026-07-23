@@ -14,6 +14,6 @@ export class ChangePasswordDto {
   })
   newPassword!: string;
 
-  @IsMatch(['newPassword'])
+  @IsMatch('newPassword')
   confirmNewPassword!: string;
 }

@@ -49,15 +49,18 @@ export abstract class DatabaseRepository<TRawDoc> {
     return (await this.model.create(data as any)) as any;
   }
 
-  async createOne({
-    data,
-    options,
-  }: {
-    data: AnyKeys<TRawDoc>;
-    options?: CreateOptions;
-  }): Promise<HydratedDocument<TRawDoc>> {
-    return (await this.model.create(data as any, options)) as any;
-  }
+ async createOne({
+  data,
+  options,
+}: {
+  data: AnyKeys<TRawDoc>;
+  options?: CreateOptions;
+}): Promise<HydratedDocument<TRawDoc>> {
+
+  console.log('Repository Data:', data);
+
+  return (await this.model.create(data as any, options)) as any;
+}
 
   async findOne({
     filter,

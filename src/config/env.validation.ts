@@ -5,7 +5,7 @@ export const envValidationSchema = Joi.object({
   PORT: Joi.number().default(8000),
   DB_URI: Joi.string().required(),
   ENC_KEY: Joi.string()
-    .length(32)
+    .length(64)
     .pattern(/^[0-9a-fA-F]+$/)
     .required()
     .messages({

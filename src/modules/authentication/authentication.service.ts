@@ -232,9 +232,15 @@ export class AuthenticationService {
       throw new BadRequestException('User not found');
     }
 
+    
     const otp = this.generateOtp();
     const otpHash = await bcrypt.hash(otp, 10);
 
+    console.log('Sending OTP to:', email);
+
+await this.mailService.sendConfirmEmail(email, otp);
+
+console.log('OTP sent successfully');
     await this.userRepository.updateOne({
       filter: { email },
       update: {

@@ -12,8 +12,6 @@ export type BrandDocument = HydratedDocument<Brand>;
   collection: 'Ecommerce_APP_BRANDS',
 })
 export class Brand {
-  @Prop({ type: Types.ObjectId })
-  _id!: Types.ObjectId | string;
 
   @Prop({ type: String, required: true, trim: true })
   name!: string;

@@ -8,9 +8,9 @@ import {
 
 @ValidatorConstraint({ name: 'MatchBetweenFields', async: false })
 export class MatchBetweenFields implements ValidatorConstraintInterface {
-  validate(value: any, args: ValidationArguments) {
-    return value === args.object['password'];
-  }
+validate(value: any, args: ValidationArguments) {
+  return value === (args.object as any)[args.constraints[0]];
+}
 
   defaultMessage(args?: ValidationArguments): string {
     return `failed to match between ${args?.property} and ${args?.constraints[0]}`;
@@ -18,15 +18,15 @@ export class MatchBetweenFields implements ValidatorConstraintInterface {
 }
 
 export function IsMatch(
-  constraints: string[] = [],
+  relatedPropertyName: string,
   validationOptions?: ValidationOptions,
 ) {
   return function (object: object, propertyName: string) {
     registerDecorator({
       target: object.constructor,
-      propertyName: propertyName,
+      propertyName,
       options: validationOptions,
-      constraints: constraints,
+      constraints: [relatedPropertyName],
       validator: MatchBetweenFields,
     });
   };
