@@ -10,7 +10,7 @@ import { OrderStatusEnum, PaymentStatusEnum } from 'src/common/enum/order.enum';
 import { RoleEnum } from 'src/common/enum/user.enums';
 import { IUser } from 'src/common/interface/user.interface';
 import { MailService } from 'src/common/module/mail/mail.service';
-import { Coupon } from 'src/model/coupon.model';
+import { Coupon, CouponDocument } from 'src/model/coupon.model';
 import { CartRepository } from '../cart/cart.repository';
 import { CouponService } from '../coupon/coupon.service';
 import { CouponRepository } from '../coupon/coupon.repository';
@@ -19,6 +19,7 @@ import { CheckoutDto } from './dto/checkout.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 import { OrderRepository } from './order.repository';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
+
 
 const SHIPPING_COST = 10;
 const FREE_SHIPPING_THRESHOLD = 100;
@@ -66,96 +67,103 @@ export class OrderService {
     return subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
   }
 
-  async checkout(user: IUser, dto: CheckoutDto) {
-    const userId = this.getUserId(user);
-    const session = await this.connection.startSession();
+async checkout(user: IUser, dto: CheckoutDto) {
+  const userId = this.getUserId(user);
+  const session = await this.connection.startSession();
 
-    try {
-      let order: any;
+  try {
+    let order: any;
 
-      await session.withTransaction(async () => {
-        const cart = await this.cartRepository.findOne({
-          filter: { user: userId },
-          options: { session },
-        });
-
-        if (!cart || !cart.items.length) {
-          throw new BadRequestException('Cart is empty');
-        }
-
-        let coupon: Coupon | null = null;
-        if (cart.appliedCoupon) {
-          coupon = await this.couponRepository.findById({
-            id: String(cart.appliedCoupon),
-            options: { session },
-          });
-
-          if (!coupon) {
-            throw new BadRequestException('Applied coupon is invalid');
-          }
-
-          this.couponService.validateCoupon(coupon, cart.items);
-        }
-
-        for (const item of cart.items) {
-          await this.productRepository.decrementStock({
-            productId: String(item.product),
-            quantity: item.quantity,
-            session,
-          });
-        }
-
-        if (coupon) {
-          const updatedCoupon = await this.couponRepository.updateOne({
-            filter: { _id: coupon._id, usedCount: { $lt: coupon.maxUses } },
-            update: { $inc: { usedCount: 1 } },
-            options: { session },
-          });
-
-          if (!updatedCoupon) {
-            throw new BadRequestException('Coupon usage limit reached');
-          }
-        }
-
-        const shippingCost = this.calculateShippingCost(cart.subtotal);
-        const total = this.round(cart.total + shippingCost);
-
-        const created = await this.orderRepository.createOne({
-          data: {
-            user: new Types.ObjectId(userId),
-            items: cart.items.map((item) => ({
-              product: item.product,
-              quantity: item.quantity,
-              priceAtPurchase: item.priceAtAdd,
-            })),
-            shippingAddress: dto.shippingAddress,
-            coupon: cart.appliedCoupon,
-            subtotal: cart.subtotal,
-            discount: cart.discount,
-            tax: cart.tax,
-            shippingCost,
-            total,
-            status: OrderStatusEnum.PENDING,
-            paymentStatus: PaymentStatusEnum.PENDING,
-          },
-          options: { session },
-        });
-
-        await this.cartRepository.clearCart(userId, session);
-        order = created;
+    await session.withTransaction(async () => {
+      const cart = await this.cartRepository.findOne({
+        filter: { user: userId },
+        options: { session },
       });
 
-      await this.mailService.sendOrderConfirmation(
-        user.email,
-        String(order._id),
-      );
+      if (!cart || cart.items.length === 0) {
+        throw new BadRequestException('Cart is empty');
+      }
 
-      return { message: 'Order placed successfully', data: order };
-    } finally {
-      await session.endSession();
-    }
+     let coupon: CouponDocument | null = null;
+
+      if (cart.appliedCoupon) {
+        coupon = await this.couponRepository.findById({
+          id: String(cart.appliedCoupon),
+          options: { session },
+        });
+
+        if (!coupon) {
+          throw new BadRequestException('Applied coupon is invalid');
+        }
+
+        this.couponService.validateCoupon(coupon, cart.items);
+      }
+
+      for (const item of cart.items) {
+        await this.productRepository.decrementStock({
+          productId: String(item.product),
+          quantity: item.quantity,
+          session,
+        });
+      }
+
+if (coupon) {
+  const updatedCoupon = await this.couponRepository.updateOne({
+    filter: {
+      _id: coupon._id,
+      usedCount: { $lt: coupon.maxUses },
+    },
+    update: {
+      $inc: { usedCount: 1 },
+    },
+    options: { session },
+  });
+
+  if (!updatedCoupon) {
+    throw new BadRequestException('Coupon usage limit reached');
   }
+}
 
+      const shippingCost = this.calculateShippingCost(cart.subtotal);
+      const total = this.round(cart.total + shippingCost);
+
+      order = await this.orderRepository.createOne({
+        data: {
+          user: new Types.ObjectId(userId),
+          items: cart.items.map((item) => ({
+            product: item.product,
+            quantity: item.quantity,
+            priceAtPurchase: item.priceAtAdd,
+          })),
+          shippingAddress: dto.shippingAddress,
+          coupon: cart.appliedCoupon,
+          subtotal: cart.subtotal,
+          discount: cart.discount,
+          tax: cart.tax,
+          shippingCost,
+          total,
+          status: OrderStatusEnum.PENDING,
+          paymentStatus: PaymentStatusEnum.PENDING,
+        },
+        options: { session },
+      });
+
+      await this.cartRepository.clearCart(userId, session);
+    });
+
+    await this.mailService.sendOrderConfirmation(
+      user.email,
+      String(order._id),
+    );
+
+    return {
+      message: 'Order placed successfully',
+      data: order,
+    };
+  } finally {
+    await session.endSession();
+  }
+}
   async findUserOrders(user: IUser, query: PaginationQueryDto) {
     const userId = this.getUserId(user);
     const result = await this.orderRepository.paginate({

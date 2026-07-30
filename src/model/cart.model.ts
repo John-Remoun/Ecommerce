@@ -27,8 +27,8 @@ export const CartItemSchema = SchemaFactory.createForClass(CartItem);
   collection: 'Ecommerce_CARTS',
 })
 export class Cart {
-  @Prop({ type: Types.ObjectId })
-  _id!: Types.ObjectId;
+  // @Prop({ type: Types.ObjectId })
+  // _id!: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: User.name, required: true, unique: true })
   user!: Types.ObjectId;

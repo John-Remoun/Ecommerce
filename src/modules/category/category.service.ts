@@ -21,20 +21,27 @@ export class CategoryService {
       .replace(/-+/g, '-');
   }
 
-  async create(dto: CreateCategoryDto) {
-    if (dto.parent) {
-      const parent = await this.categoryRepository.findById({ id: dto.parent });
-      if (!parent) {
-        throw new BadRequestException('Parent category not found');
-      }
-    }
+async create(dto: CreateCategoryDto) {
+  if (dto.parent) {
+    const parent = await this.categoryRepository.findById({ id: dto.parent });
 
-    const category = await this.categoryRepository.createOne({ data: dto });
-    return {
-      message: 'Category created successfully',
-      data: category,
-    };
+    if (!parent) {
+      throw new BadRequestException('Parent category not found');
+    }
   }
+
+  const category = await this.categoryRepository.createOne({
+    data: {
+      ...dto,
+      slug: this.generateSlug(dto.name),
+    },
+  });
+
+  return {
+    message: 'Category created successfully',
+    data: category,
+  };
+}
 
   async findAll(query: PaginationQueryDto) {
     const result = await this.categoryRepository.paginate({

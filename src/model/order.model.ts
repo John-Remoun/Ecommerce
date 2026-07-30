@@ -48,8 +48,8 @@ const OrderItemSchema = SchemaFactory.createForClass(OrderItem);
   collection: 'Ecommerce_APP_ORDERS',
 })
 export class Order {
-  @Prop({ type: Types.ObjectId })
-  _id!: Types.ObjectId | string;
+  // @Prop({ type: Types.ObjectId })
+  // _id!: Types.ObjectId | string;
 
   @Prop({ type: Types.ObjectId, ref: User.name, required: true, index: true })
   user!: Types.ObjectId;

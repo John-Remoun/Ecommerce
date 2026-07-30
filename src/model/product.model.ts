@@ -14,8 +14,8 @@ export type ProductDocument = HydratedDocument<Product>;
   collection: 'Ecommerce_APP_PRODUCTS',
 })
 export class Product {
-  @Prop({ type: Types.ObjectId })
-  _id!: Types.ObjectId | string;
+    // @Prop({ type: Types.ObjectId })
+    // _id!: Types.ObjectId | string;
 
   @Prop({ type: String, required: true, trim: true })
   title!: string;

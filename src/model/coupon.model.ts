@@ -11,8 +11,8 @@ export type CouponDocument = HydratedDocument<Coupon>;
   collection: 'Ecommerce_COUPONS',
 })
 export class Coupon {
-  @Prop({ type: Types.ObjectId })
-  _id!: Types.ObjectId;
+  // @Prop({ type: Types.ObjectId })
+  // _id!: Types.ObjectId;
   @Prop({
     type: String,
     required: true,

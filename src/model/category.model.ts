@@ -12,8 +12,8 @@ export type CategoryDocument = HydratedDocument<Category>;
   collection: 'Ecommerce_APP_CATEGORIES',
 })
 export class Category {
-  @Prop({ type: Types.ObjectId })
-  _id!: Types.ObjectId | string;
+  // @Prop({ type: Types.ObjectId })
+  // _id!: Types.ObjectId | string;
 
   @Prop({ type: String, required: true, trim: true })
   name!: string;
